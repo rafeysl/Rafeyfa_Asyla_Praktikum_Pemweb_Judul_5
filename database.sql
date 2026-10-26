@@ -13,13 +13,14 @@ CREATE TABLE IF NOT EXISTS mahasiswa (
     npm VARCHAR(20) NOT NULL UNIQUE,
     nama VARCHAR(100) NOT NULL,
     program_studi VARCHAR(100) NOT NULL,
-    angkatan INT NOT NULL,
+    angkatan INT NOT NULL
     email VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 3. Data Awal (Seeding)
+
 INSERT INTO mahasiswa (npm, nama, program_studi, angkatan, email) VALUES
 ('230101001', 'Ahmad Fauzi', 'Teknik Informatika', 2023, 'ahmad.fauzi@example.com'),
 ('230101002', 'Siti Nurhaliza', 'Sistem Informasi', 2023, 'siti.nurhaliza@example.com'),
