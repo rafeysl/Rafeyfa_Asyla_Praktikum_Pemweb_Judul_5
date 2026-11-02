@@ -6,6 +6,7 @@
  */
 
 // Header Respons API
+header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With');
@@ -74,9 +75,33 @@ function handleGet(PDO $pdo, ?int $id): void {
         $search = isset($_GET['search']) ? trim($_GET['search']) : '';
         if (!empty($search)) {
             //Percobaan 5-2 Langkah 2 jika search ada
+            $stmt = $pdo->prepare('SELECT id, npm, nama, program_studi, angkatan, email, created_at FROM mahasiswa WHERE id = :id LIMIT 1');
+            $stmt->execute([':id' => $id]);
+            $mahasiswa = $stmt->fetch();
+            if ($mahasiswa) {
+                http_response_code(200);
+                echo json_encode([
+                    'status' => 'success',
+                    'data' => $mahasiswa
+                ]);
+            } else {
+                http_response_code(404);
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => "Data mahasiswa dengan ID {$id} tidak ditemukan.",
+                ]);
+            }
         } else {
             //Percobaan 5-2 Langkah 2 jika tidak ada search
+            $stmt = $pdo->prepare('SELECT id, npm, nama, program_studi, angkatan, email, created_at FROM mahasiswa WHERE npm LIKE :kw1 OR nama LIKE :kw2 OR program_studi LIKE :kw3 ORDER BY id DESC');
+            $stmt->execute([
+                ':kw1' => "%{$search}%",
+                ':kw2' => "%{$search}%",
+                ':kw3' => "%{$search}%"
+            ]);
         }
+
+        $stmt = $pdo->query('SELECT id, npm, nama, program_studi, angkatan, email, created_at FROM mahasiswa ORDER BY id DESC');
 
         $result = $stmt->fetchAll();
         http_response_code(200);
@@ -143,12 +168,46 @@ function handlePost(PDO $pdo): void {
  * 3. Menangani HTTP PUT (Perbarui Data Mahasiswa)
  */
 function handlePut(PDO $pdo, ?int $id): void {
-   
+   if (!$id) {
+    http_response_code(400);
+    echo json_encode(['status' => 'error', 'message' => 'ID mahasiswa wajib disertakan untuk pembaruan.']);
+    return;
+   }
+
+   $input = json_decode(file_get_contents('php://input'), true) ?? [];
+   $stmt = $pdo->prepare('UPDATE mahasiswa SET npm = :npm, nama = :nama, program_studi = :prodi, angkatan = :angkatan, email = :email WHERE id = :id');
+   $stmt->execute([
+       ':npm' => trim($input['npm'] ?? ''),
+       ':nama' => trim($input['nama'] ?? ''),
+       ':prodi' => trim($input['program_studi'] ?? ''),
+       ':angkatan' => (int)($input['angkatan'] ?? 0),
+       ':email' => trim($input['email'] ?? ''),
+       ':id' => $id
+   ]);
+
+   http_response_code(200);
+    echo json_encode([
+         'status' => 'success',
+         'message' => "Data mahasiswa dengan ID {$id} berhasil diperbarui."
+    ]);
 }
 
 /**
  * 4. Menangani HTTP DELETE (Hapus Data Mahasiswa)
  */
 function handleDelete(PDO $pdo, ?int $id): void {
-    
+    if (!$id) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'ID mahasiswa wajib disertakan untuk penghapusan.']);
+        return;
+    }
+
+    $stmt = $pdo->prepare('DELETE FROM mahasiswa WHERE id = :id');
+    $stmt->execute([':id' => $id]);
+
+    http_response_code(200);
+    echo json_encode([
+        'status' => 'success',
+        'message' => "Data mahasiswa dengan ID {$id} berhasil dihapus."
+    ]);
 }
